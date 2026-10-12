@@ -58,6 +58,12 @@ public static class ExportNaming
         return Path.Combine(options.OutputDirectory, relative);
     }
 
+    private static readonly HashSet<char> InvalidFileNameChars =
+    [
+        .. Path.GetInvalidFileNameChars(),
+        '\"', '<', '>', '|', ':', '*', '?', '\\', '/'
+    ];
+
     private static string SanitizePrefix(string prefix)
     {
         if (string.IsNullOrWhiteSpace(prefix))
@@ -65,8 +71,7 @@ public static class ExportNaming
             return "contact-sheet";
         }
 
-        var invalid = Path.GetInvalidFileNameChars();
-        var cleaned = new string(prefix.Select(c => invalid.Contains(c) ? '-' : c).ToArray()).Trim();
+        var cleaned = new string(prefix.Select(c => char.IsControl(c) || InvalidFileNameChars.Contains(c) ? '-' : c).ToArray()).Trim();
         return string.IsNullOrEmpty(cleaned) ? "contact-sheet" : cleaned;
     }
 }

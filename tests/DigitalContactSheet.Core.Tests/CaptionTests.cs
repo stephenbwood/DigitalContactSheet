@@ -9,7 +9,7 @@ namespace DigitalContactSheet.Core.Tests;
 public class CaptionTests
 {
     private static readonly ImageFile Image = new(
-        @"C:\photos\very_long_camera_file_name_sequence_000123.tif",
+        Path.Combine(Path.GetTempPath(), "photos", "very_long_camera_file_name_sequence_000123.tif"),
         "very_long_camera_file_name_sequence_000123.tif",
         0,
         DateTime.UnixEpoch);
