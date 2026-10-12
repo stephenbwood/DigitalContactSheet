@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>DigitalContactSheet.Core</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Pick the libvips native package for the publish RID, or infer it from the host when
+         building/running without an explicit RID (dev, tests). Referencing only one keeps the
+         build output from carrying every platform's binaries. -->
+    <VipsRid Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</VipsRid>
+    <VipsRid Condition="'$(VipsRid)' == '' AND $([MSBuild]::IsOSPlatform('Windows')) AND '$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)' == 'X64'">win-x64</VipsRid>
+    <VipsRid Condition="'$(VipsRid)' == '' AND $([MSBuild]::IsOSPlatform('Windows')) AND '$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)' == 'Arm64'">win-arm64</VipsRid>
+    <VipsRid Condition="'$(VipsRid)' == '' AND $([MSBuild]::IsOSPlatform('OSX')) AND '$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)' == 'Arm64'">osx-arm64</VipsRid>
+    <VipsRid Condition="'$(VipsRid)' == '' AND $([MSBuild]::IsOSPlatform('OSX'))">osx-x64</VipsRid>
+    <VipsRid Condition="'$(VipsRid)' == '' AND $([MSBuild]::IsOSPlatform('Linux'))">linux-x64</VipsRid>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- SkiaSharp is used for composition, text and PDF output. Image decoding/encoding is
+         delegated to libvips (via NetVips), which supports the full TIFF/JPEG/PNG matrix. -->
+    <PackageReference Include="SkiaSharp" Version="4.153.1" />
+    <PackageReference Include="NetVips" Version="3.2.0" />
+  </ItemGroup>
+
+  <!-- libvips native binaries (LGPL-2.1-or-later), linked dynamically. -->
+  <ItemGroup>
+    <PackageReference Include="NetVips.Native.win-x64" Version="8.18.7" Condition="'$(VipsRid)' == 'win-x64'" />
+    <PackageReference Include="NetVips.Native.win-arm64" Version="8.18.7" Condition="'$(VipsRid)' == 'win-arm64'" />
+    <PackageReference Include="NetVips.Native.osx-arm64" Version="8.18.7" Condition="'$(VipsRid)' == 'osx-arm64'" />
+    <PackageReference Include="NetVips.Native.osx-x64" Version="8.18.7" Condition="'$(VipsRid)' == 'osx-x64'" />
+    <PackageReference Include="NetVips.Native.linux-x64" Version="8.18.7" Condition="'$(VipsRid)' == 'linux-x64'" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Bundled fonts so Windows and macOS produce identical output. -->
+    <EmbeddedResource Include="Fonts\*.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DigitalContactSheet.Core.Tests" />
+  </ItemGroup>
+
+</Project>

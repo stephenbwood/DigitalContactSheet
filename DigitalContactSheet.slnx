@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DigitalContactSheet.App/DigitalContactSheet.App.csproj" />
+    <Project Path="src/DigitalContactSheet.Core/DigitalContactSheet.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DigitalContactSheet.App.Tests/DigitalContactSheet.App.Tests.csproj" />
+    <Project Path="tests/DigitalContactSheet.Core.Tests/DigitalContactSheet.Core.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,301 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:infra="clr-namespace:DigitalContactSheet.App.Infrastructure"
+        xmlns:vm="clr-namespace:DigitalContactSheet.App.ViewModels"
+        x:Class="DigitalContactSheet.App.MainWindow"
+        Title="Digital Contact Sheet"
+        Width="1220" Height="840"
+        MinWidth="960" MinHeight="640"
+        Background="#F3F3F3">
+
+  <Window.Resources>
+    <infra:EnumDisplayConverter x:Key="EnumDisplay" />
+    <infra:HexToBrushConverter x:Key="HexToBrush" />
+  </Window.Resources>
+
+  <DockPanel>
+
+    <!-- Bottom status / action bar -->
+    <Border DockPanel.Dock="Bottom" Background="#FFFFFF" BorderBrush="#DDDDDD" BorderThickness="0,1,0,0" Padding="12,8">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
+          <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" />
+          <TextBlock Text="{Binding ErrorText}" Foreground="#C42B1C" TextWrapping="Wrap"
+                     IsVisible="{Binding HasError}" />
+          <ProgressBar Height="6" Value="{Binding ProgressValue}" Minimum="0" Maximum="100"
+                       IsVisible="{Binding IsBusy}" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <Button Content="Cancel" Command="{Binding CancelCommand}" IsVisible="{Binding IsBusy}" />
+          <Button Content="Generate" Command="{Binding GenerateCommand}" MinWidth="120"
+                  Classes="accent" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <Grid ColumnDefinitions="400,*">
+
+      <!-- Settings panel -->
+      <ScrollViewer Grid.Column="0" Background="#FFFFFF">
+        <StackPanel Margin="16" Spacing="10">
+
+          <TextBlock Text="Source" FontSize="16" FontWeight="SemiBold" />
+
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+            <TextBox Grid.Column="0" Text="{Binding SourceFolder}" PlaceholderText="Source folder" />
+            <Button Grid.Column="1" Content="Browse…" Command="{Binding BrowseSourceCommand}" />
+          </Grid>
+
+          <CheckBox Content="Include subfolders (each becomes its own sheet)"
+                    IsChecked="{Binding RecurseSubfolders}" />
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Sort order" VerticalAlignment="Center" Width="110" />
+            <ComboBox ItemsSource="{Binding SortOrders}" SelectedItem="{Binding SortOrder}" HorizontalAlignment="Stretch" MinWidth="200">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding Converter={StaticResource EnumDisplay}}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <TextBlock Text="{Binding FolderSummary}" Foreground="#666666" />
+
+          <ListBox ItemsSource="{Binding Folders}" SelectedItem="{Binding SelectedFolder}" MaxHeight="150"
+                   IsVisible="{Binding HasFolders}">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding ImageCount, StringFormat='{}{0} images'}" Foreground="#888888" />
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+
+          <Separator />
+
+          <TextBlock Text="Layout" FontSize="16" FontWeight="SemiBold" />
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Page size" VerticalAlignment="Center" Width="110" />
+            <ComboBox ItemsSource="{Binding PageSizePresets}" SelectedItem="{Binding PageSizePreset}" MinWidth="200">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding Converter={StaticResource EnumDisplay}}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsCustomPageSize}">
+            <TextBlock Text="Custom size" VerticalAlignment="Center" Width="110" />
+            <NumericUpDown Value="{Binding CustomWidth}" Minimum="1" Maximum="5000" Increment="1" FormatString="0.##" Width="90" />
+            <TextBlock Text="×" VerticalAlignment="Center" />
+            <NumericUpDown Value="{Binding CustomHeight}" Minimum="1" Maximum="5000" Increment="1" FormatString="0.##" Width="90" />
+            <ComboBox ItemsSource="{Binding Units}" SelectedItem="{Binding CustomUnit}" Width="70">
+              <ComboBox.ItemTemplate>
+                <DataTemplate><TextBlock Text="{Binding Converter={StaticResource EnumDisplay}}" /></DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Orientation" VerticalAlignment="Center" Width="110" />
+            <ComboBox ItemsSource="{Binding Orientations}" SelectedItem="{Binding Orientation}" MinWidth="200">
+              <ComboBox.ItemTemplate>
+                <DataTemplate><TextBlock Text="{Binding Converter={StaticResource EnumDisplay}}" /></DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Resolution" VerticalAlignment="Center" Width="110" />
+            <NumericUpDown Value="{Binding Resolution}" Minimum="1" Maximum="2400" Increment="1" Width="110" />
+            <TextBlock Text="DPI" VerticalAlignment="Center" />
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Page margin" VerticalAlignment="Center" Width="110" />
+            <NumericUpDown Value="{Binding PageMarginValue}" Minimum="0" Maximum="500" Increment="0.5" FormatString="0.##" Width="110" />
+            <ComboBox ItemsSource="{Binding Units}" SelectedItem="{Binding PageMarginUnit}" Width="70">
+              <ComboBox.ItemTemplate>
+                <DataTemplate><TextBlock Text="{Binding Converter={StaticResource EnumDisplay}}" /></DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Image spacing" VerticalAlignment="Center" Width="110" />
+            <NumericUpDown Value="{Binding ImageSpacingValue}" Minimum="0" Maximum="500" Increment="0.5" FormatString="0.##" Width="110" />
+            <ComboBox ItemsSource="{Binding Units}" SelectedItem="{Binding ImageSpacingUnit}" Width="70">
+              <ComboBox.ItemTemplate>
+                <DataTemplate><TextBlock Text="{Binding Converter={StaticResource EnumDisplay}}" /></DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Columns" VerticalAlignment="Center" Width="110" />
+            <NumericUpDown Value="{Binding Columns}" Minimum="1" Maximum="50" Increment="1" Width="110" />
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Rows" VerticalAlignment="Center" Width="110" />
+            <NumericUpDown Value="{Binding Rows}" Minimum="1" Maximum="50" Increment="1" Width="110" />
+          </StackPanel>
+
+          <Separator />
+
+          <TextBlock Text="Appearance" FontSize="16" FontWeight="SemiBold" />
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Background" VerticalAlignment="Center" Width="110" />
+            <TextBox Text="{Binding BackgroundColorHex}" Width="120" />
+            <Border Width="28" Height="28" CornerRadius="4" BorderBrush="#CCCCCC" BorderThickness="1"
+                    Background="{Binding BackgroundColorHex, Converter={StaticResource HexToBrush}}" />
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Text colour" VerticalAlignment="Center" Width="110" />
+            <TextBox Text="{Binding TextColorHex}" Width="120" />
+            <Border Width="28" Height="28" CornerRadius="4" BorderBrush="#CCCCCC" BorderThickness="1"
+                    Background="{Binding TextColorHex, Converter={StaticResource HexToBrush}}" />
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Zoom mode" VerticalAlignment="Center" Width="110" />
+            <ComboBox ItemsSource="{Binding ZoomModes}" SelectedItem="{Binding ZoomMode}" MinWidth="200">
+              <ComboBox.ItemTemplate>
+                <DataTemplate><TextBlock Text="{Binding Converter={StaticResource EnumDisplay}}" /></DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Horizontal" VerticalAlignment="Center" Width="110" />
+            <ComboBox ItemsSource="{Binding HorizontalAlignments}" SelectedItem="{Binding HorizontalAlignment}" MinWidth="200">
+              <ComboBox.ItemTemplate>
+                <DataTemplate><TextBlock Text="{Binding Converter={StaticResource EnumDisplay}}" /></DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Vertical" VerticalAlignment="Center" Width="110" />
+            <ComboBox ItemsSource="{Binding VerticalAlignments}" SelectedItem="{Binding VerticalAlignment}" MinWidth="200">
+              <ComboBox.ItemTemplate>
+                <DataTemplate><TextBlock Text="{Binding Converter={StaticResource EnumDisplay}}" /></DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <Separator />
+
+          <TextBlock Text="Typography" FontSize="16" FontWeight="SemiBold" />
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Font family" VerticalAlignment="Center" Width="110" />
+            <ComboBox ItemsSource="{Binding FontFamilies}" SelectedItem="{Binding FontFamily}" MinWidth="200" />
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Font weight" VerticalAlignment="Center" Width="110" />
+            <ComboBox ItemsSource="{Binding FontWeights}" SelectedItem="{Binding FontWeight}" MinWidth="200">
+              <ComboBox.ItemTemplate>
+                <DataTemplate><TextBlock Text="{Binding Converter={StaticResource EnumDisplay}}" /></DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Font size" VerticalAlignment="Center" Width="110" />
+            <NumericUpDown Value="{Binding FontSize}" Minimum="1" Maximum="400" Increment="0.5" FormatString="0.##" Width="110" />
+            <TextBlock Text="pt" VerticalAlignment="Center" />
+          </StackPanel>
+
+          <CheckBox Content="Show file name captions" IsChecked="{Binding ShowCaptions}" />
+          <CheckBox Content="Include file extension" IsChecked="{Binding ShowFileExtensions}"
+                    IsEnabled="{Binding ShowCaptions}" Margin="24,0,0,0" />
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Caption gap" VerticalAlignment="Center" Width="110" />
+            <NumericUpDown Value="{Binding CaptionGapValue}" Minimum="0" Maximum="500" Increment="0.5" FormatString="0.##" Width="110" />
+            <ComboBox ItemsSource="{Binding Units}" SelectedItem="{Binding CaptionGapUnit}" Width="70">
+              <ComboBox.ItemTemplate>
+                <DataTemplate><TextBlock Text="{Binding Converter={StaticResource EnumDisplay}}" /></DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <Separator />
+
+          <TextBlock Text="Output" FontSize="16" FontWeight="SemiBold" />
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Format" VerticalAlignment="Center" Width="110" />
+            <ComboBox ItemsSource="{Binding OutputFormats}" SelectedItem="{Binding OutputFormat}" MinWidth="200">
+              <ComboBox.ItemTemplate>
+                <DataTemplate><TextBlock Text="{Binding Converter={StaticResource EnumDisplay}}" /></DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsJpeg}">
+            <TextBlock Text="JPEG quality" VerticalAlignment="Center" Width="110" />
+            <NumericUpDown Value="{Binding JpgQuality}" Minimum="1" Maximum="100" Increment="1" Width="110" />
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Destination" VerticalAlignment="Center" Width="110" />
+            <ComboBox ItemsSource="{Binding OutputModes}" SelectedItem="{Binding OutputMode}" MinWidth="200">
+              <ComboBox.ItemTemplate>
+                <DataTemplate><TextBlock Text="{Binding Converter={StaticResource EnumDisplay}}" /></DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6" IsVisible="{Binding UsesOutputDirectory}">
+            <TextBox Grid.Column="0" Text="{Binding OutputDirectory}" PlaceholderText="Output folder" />
+            <Button Grid.Column="1" Content="Browse…" Command="{Binding BrowseOutputCommand}" />
+          </Grid>
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="File name" VerticalAlignment="Center" Width="110" />
+            <TextBox Text="{Binding FileNamePrefix}" Width="200" />
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsRaster}">
+            <TextBlock Text="Page digits" VerticalAlignment="Center" Width="110" />
+            <NumericUpDown Value="{Binding PageNumberDigits}" Minimum="1" Maximum="10" Increment="1" Width="110" />
+          </StackPanel>
+
+          <Separator />
+          <TextBlock Text="Bundled font: Inter. Other fonts come from your system."
+                     Foreground="#888888" TextWrapping="Wrap" FontSize="11" />
+
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- Preview -->
+      <DockPanel Grid.Column="1" Background="#E8E8E8">
+        <Border DockPanel.Dock="Top" Background="#FFFFFF" BorderBrush="#DDDDDD" BorderThickness="0,0,0,1" Padding="12,8">
+          <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+            <Button Content="◀" Command="{Binding PreviousPageCommand}" />
+            <TextBlock Text="{Binding PageLabel}" VerticalAlignment="Center" FontWeight="SemiBold" />
+            <Button Content="▶" Command="{Binding NextPageCommand}" />
+          </StackPanel>
+        </Border>
+
+        <ScrollViewer Padding="24">
+          <Border Background="#FFFFFF" BorderBrush="#CCCCCC" BorderThickness="1" Padding="0"
+                  HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Image Source="{Binding PreviewImage}" Stretch="Uniform" MaxWidth="760" />
+          </Border>
+        </ScrollViewer>
+      </DockPanel>
+
+    </Grid>
+  </DockPanel>
+</Window>
