@@ -15,9 +15,10 @@ public class ExportNamingTests
     [Fact]
     public void RasterFileName_SanitizesPrefix()
     {
-        var name = ExportNaming.RasterFileName("a/b:c", 0, 3, OutputFormat.Jpg);
+        var name = ExportNaming.RasterFileName("a/b:c\\d", 0, 3, OutputFormat.Jpg);
         Assert.DoesNotContain('/', name);
         Assert.DoesNotContain(':', name);
+        Assert.DoesNotContain('\\', name);
     }
 
     [Fact]
@@ -30,39 +31,50 @@ public class ExportNamingTests
     [Fact]
     public void ResolveDestination_MirrorsRelativePath()
     {
+        var root = Path.Combine(Path.GetTempPath(), "root");
+        var source = Path.Combine(root, "sub", "deep");
+        var output = Path.Combine(Path.GetTempPath(), "out");
+
         var options = new ContactSheetOptions
         {
             OutputMode = OutputMode.MirrorUnderOutputDirectory,
-            OutputDirectory = @"C:\out",
+            OutputDirectory = output,
         };
 
-        var destination = ExportNaming.ResolveDestination(options, @"C:\root", @"C:\root\sub\deep");
-        Assert.Equal(Path.Combine(@"C:\out", "sub", "deep"), destination);
+        var destination = ExportNaming.ResolveDestination(options, root, source);
+        Assert.Equal(Path.Combine(output, "sub", "deep"), destination);
     }
 
     [Fact]
     public void ResolveDestination_RootFolderGoesDirectlyIntoOutput()
     {
+        var root = Path.Combine(Path.GetTempPath(), "root");
+        var output = Path.Combine(Path.GetTempPath(), "out");
+
         var options = new ContactSheetOptions
         {
             OutputMode = OutputMode.MirrorUnderOutputDirectory,
-            OutputDirectory = @"C:\out",
+            OutputDirectory = output,
         };
 
-        var destination = ExportNaming.ResolveDestination(options, @"C:\root", @"C:\root");
-        Assert.Equal(@"C:\out", destination);
+        var destination = ExportNaming.ResolveDestination(options, root, root);
+        Assert.Equal(output, destination);
     }
 
     [Fact]
     public void ResolveDestination_IntoSourceFolderIgnoresOutputDir()
     {
+        var root = Path.Combine(Path.GetTempPath(), "root");
+        var source = Path.Combine(root, "sub");
+        var output = Path.Combine(Path.GetTempPath(), "out");
+
         var options = new ContactSheetOptions
         {
             OutputMode = OutputMode.IntoSourceFolder,
-            OutputDirectory = @"C:\out",
+            OutputDirectory = output,
         };
 
-        var destination = ExportNaming.ResolveDestination(options, @"C:\root", @"C:\root\sub");
-        Assert.Equal(@"C:\root\sub", destination);
+        var destination = ExportNaming.ResolveDestination(options, root, source);
+        Assert.Equal(source, destination);
     }
 }
